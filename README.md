@@ -14,9 +14,20 @@ raw audio → mean-MFCC vector (20 values, 2.5s window) → [CNN+LSTM  or  MLP] 
 
 **MLP** (scikit-learn) — a single `MLPClassifier(hidden_layer_sizes=(2300,), alpha=0.01, batch_size=256, learning_rate='adaptive', max_iter=800)` on the same feature vector, standardized with `StandardScaler`.
 
+## Results
+
+Trained on the full RAVDESS speech set (1,440 clips, 24 actors, 16-class gender+emotion split):
+
+| Model | Test accuracy |
+|---|---|
+| MLP | 75.7% |
+| CNN+LSTM | 63.9% |
+
+The MLP's trained weights (`model/emotion_model.joblib`, 1.3MB) are bundled in this repo, so `/predict/mlp` and the frontend's MLP toggle work immediately on clone. The CNN+LSTM checkpoint is ~170MB — over GitHub's 100MB push limit — so it isn't bundled; run `train_cnn_lstm.py` to reproduce it (takes a few minutes on CPU).
+
 ## Getting started
 
-Training requires a labeled dataset with the RAVDESS filename convention (emotion code + actor number in the filename) — RAVDESS itself is free but licensed, so it isn't bundled here.
+Training requires a labeled dataset with the RAVDESS filename convention (emotion code + actor number in the filename). [RAVDESS](https://zenodo.org/records/1188976) itself is free to download (CC BY-NC-SA 4.0), just not bundled in this repo — download `Audio_Speech_Actors_01-24.zip` and point `--data_dir` at the extracted folder.
 
 ```bash
 git clone https://github.com/ManideepDelta/speech-emotion-recognition.git

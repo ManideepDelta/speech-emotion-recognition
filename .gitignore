@@ -2,8 +2,8 @@ __pycache__/
 *.pyc
 .env
 .venv/
+# CNN+LSTM checkpoint is ~170MB, over GitHub's 100MB push limit
 checkpoints/
-model/
 *.wav
 data/
 ._*
