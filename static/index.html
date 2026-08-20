@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VoiceTone — Speech Emotion Recognition</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --cream:#E8E5F5; --ink:#211D3A; --indigo:#3D3A7A; --indigo-dark:#2B2958;
+    --coral:#E4633F; --mint:#6FBF97;
+    --white:#FFFFFF; --line:#211D3A;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--cream);color:var(--ink);font-family:'IBM Plex Mono',monospace;line-height:1.5;}
+  h1,h2,h3,.brand,nav a,button{font-family:'Space Grotesk',sans-serif;}
+  a{color:inherit;}
+  img,svg{display:block;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 24px;}
+
+  .card{background:var(--white);border:3px solid var(--line);border-radius:0;}
+  .shadow{box-shadow:6px 6px 0 var(--ink);}
+  .shadow-sm{box-shadow:4px 4px 0 var(--ink);}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;border:3px solid var(--ink);background:var(--coral);color:var(--white);
+    font-weight:700;font-size:13px;letter-spacing:.02em;padding:13px 20px;cursor:pointer;box-shadow:5px 5px 0 var(--ink);
+    transition:transform .08s ease, box-shadow .08s ease;
+  }
+  .btn:hover:not(:disabled){transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--ink);}
+  .btn:active:not(:disabled){transform:translate(1px,1px);box-shadow:3px 3px 0 var(--ink);}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn.dark{background:var(--indigo);color:var(--cream);}
+  .btn.small{padding:9px 14px;font-size:11.5px;box-shadow:3px 3px 0 var(--ink);}
+
+  /* ---- nav ---- */
+  header.nav{position:sticky;top:0;z-index:20;background:var(--cream);border-bottom:3px solid var(--ink);}
+  header.nav .bar{display:flex;align-items:center;justify-content:space-between;padding-top:16px;padding-bottom:16px;}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:17px;}
+  .brand .mark{width:26px;height:26px;background:var(--indigo);border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;color:var(--cream);}
+  nav.links{display:flex;gap:26px;font-size:12.5px;font-weight:600;}
+  @media (max-width:400px){ nav.links{gap:14px;font-size:11px;} .brand{font-size:15px;} }
+  nav.links a{text-decoration:none;padding-bottom:2px;border-bottom:2px solid transparent;}
+  nav.links a:hover{border-bottom-color:var(--coral);}
+
+  /* ---- hero ---- */
+  .hero{padding:56px 0 48px;}
+  .eyebrow{display:inline-flex;align-items:center;gap:7px;background:var(--ink);color:var(--cream);font-size:11px;font-weight:700;letter-spacing:.08em;padding:6px 12px;margin-bottom:22px;}
+  .hero h1{font-size:44px;line-height:1.05;font-weight:700;max-width:15ch;margin-bottom:18px;}
+  .hero h1 em{font-style:normal;background:var(--coral);color:var(--white);padding:0 6px;box-shadow:3px 3px 0 var(--ink);display:inline-block;}
+  .hero p{font-size:13.5px;color:#3A3560;max-width:52ch;margin-bottom:28px;}
+  .hero .ctas{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:34px;}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .stat{border:2px solid var(--ink);background:var(--white);padding:14px 16px;}
+  .stat b{display:block;font-family:'Space Grotesk',sans-serif;font-size:22px;}
+  .stat span{font-size:10.5px;color:#5C577F;}
+
+  /* ---- sections ---- */
+  section{padding:56px 0;border-top:3px solid var(--ink);}
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:30px;flex-wrap:wrap;gap:10px;}
+  .section-head h2{font-size:24px;font-weight:700;}
+  .section-head .num{font-size:11px;color:#5C577F;font-weight:600;}
+
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  .step{border:2px solid var(--ink);background:var(--white);padding:20px;}
+  .step .n{width:30px;height:30px;background:var(--ink);color:var(--cream);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;margin-bottom:14px;}
+  .step h3{font-size:14.5px;margin-bottom:8px;}
+  .step p{font-size:11.5px;color:#4B466E;}
+
+  .grid-2{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:start;}
+  @media (max-width:760px){ .grid-2{grid-template-columns:1fr;} .stats,.steps{grid-template-columns:1fr;} }
+
+  /* ---- upload dropzone ---- */
+  .upload-card{padding:24px;}
+  .upload-card .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;border-bottom:2px solid var(--ink);padding-bottom:12px;}
+  .upload-card .hd h3{font-size:15px;font-weight:700;}
+  .unit-toggle{display:inline-flex;border:2px solid var(--ink);overflow:hidden;font-size:10px;font-weight:700;}
+  .unit-toggle button{border:none;background:var(--white);padding:5px 8px;cursor:pointer;font-family:'IBM Plex Mono',monospace;}
+  .unit-toggle button.active{background:var(--indigo);color:var(--cream);}
+  .dropzone{
+    display:block;border:2px dashed var(--ink);padding:32px 20px;text-align:center;cursor:pointer;background:var(--cream);
+    transition:background .12s ease, border-style .12s ease;
+  }
+  .dropzone:hover, .dropzone.drag{background:#DCD7EE;border-style:solid;}
+  .dropzone input{display:none;}
+  .dropzone .ico{width:36px;height:36px;margin:0 auto 12px;stroke:var(--ink);}
+  .dropzone .hint{font-size:12px;font-weight:600;}
+  .dropzone .sub{font-size:10.5px;color:#5C577F;margin-top:4px;}
+
+  /* ---- custom audio player ---- */
+  .player{display:none;margin-top:16px;border:2px solid var(--ink);background:var(--white);padding:12px 14px;align-items:center;gap:12px;}
+  .player.on{display:flex;}
+  .player .play{width:34px;height:34px;border:2px solid var(--ink);background:var(--mint);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .player .play svg{width:14px;height:14px;stroke:var(--ink);fill:var(--ink);}
+  .player .seek{flex:1;height:8px;background:var(--cream);border:2px solid var(--ink);position:relative;cursor:pointer;}
+  .player .seek i{position:absolute;left:0;top:0;bottom:0;background:var(--indigo);width:0%;}
+  .player .time{font-size:10.5px;font-weight:600;white-space:nowrap;}
+  .player .name{font-size:10px;color:#5C577F;margin-top:8px;}
+
+  button#go{width:100%;justify-content:center;margin-top:16px;}
+  .err{display:none;margin-top:14px;background:var(--coral);color:var(--white);border:2px solid var(--ink);padding:11px 13px;font-size:11.5px;font-weight:600;}
+
+  /* ---- result ---- */
+  .result-card{padding:0;position:sticky;top:90px;}
+  .result-card .placeholder{padding:30px 22px;text-align:center;}
+  .result-card .placeholder svg{width:40px;height:40px;margin:0 auto 12px;stroke:var(--ink);opacity:.35;}
+  .result-card .placeholder p{font-size:11.5px;color:#5C577F;}
+
+  .readout{padding:22px;display:none;}
+  .readout .eyebrow2{font-size:10px;font-weight:700;letter-spacing:.1em;color:#5C577F;margin-bottom:6px;}
+  .readout .emotion{font-size:26px;font-weight:700;color:var(--indigo);text-transform:capitalize;}
+  .readout .conf{font-size:11.5px;color:#5C577F;margin-top:3px;margin-bottom:16px;}
+  .bar-row{display:grid;grid-template-columns:116px 1fr 34px;align-items:center;gap:8px;font-size:10px;color:#4B466E;margin-top:8px;text-transform:capitalize;}
+  .bar-row .track{height:6px;border:2px solid var(--ink);background:var(--white);}
+  .bar-row .track i{display:block;height:100%;background:var(--indigo);}
+  .bar-row.top .track i{background:var(--mint);}
+  .bar-row.top{color:var(--ink);font-weight:700;}
+
+  /* ---- faq ---- */
+  .faq-item{border:2px solid var(--ink);background:var(--white);margin-bottom:12px;}
+  .faq-q{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;cursor:pointer;font-size:13px;font-weight:600;}
+  .faq-q .plus{width:20px;height:20px;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s ease;font-size:14px;font-weight:700;}
+  .faq-item.open .plus{transform:rotate(45deg);background:var(--coral);color:var(--white);}
+  .faq-a{max-height:0;overflow:hidden;transition:max-height .2s ease;font-size:11.5px;color:#4B466E;line-height:1.7;}
+  .faq-item.open .faq-a{max-height:220px;}
+  .faq-a-inner{padding:0 18px 16px;}
+
+  /* ---- footer ---- */
+  footer{border-top:3px solid var(--ink);background:var(--ink);color:var(--cream);padding:40px 0 28px;margin-top:40px;}
+  footer .row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;margin-bottom:26px;}
+  footer .stack{display:flex;gap:8px;flex-wrap:wrap;}
+  footer .stack span{border:1.5px solid #4A4570;background:#2A2645;font-size:10.5px;padding:5px 10px;font-weight:600;}
+  footer .bottom{border-top:1px solid #39355A;padding-top:18px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:10.5px;color:#9C97BE;}
+  footer h3{font-size:14px;margin-bottom:4px;}
+  footer p{font-size:11px;color:#9C97BE;max-width:40ch;}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap bar">
+    <div class="brand"><span class="mark">◭</span>VoiceTone</div>
+    <nav class="links">
+      <a href="#how">How it works</a>
+      <a href="#try">Try it</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="hero" style="border-top:none;padding-top:56px;">
+    <div class="eyebrow">● TWO MODELS · 16 CLASSES</div>
+    <h1>Hear <em>what</em> a voice is really saying.</h1>
+    <p>Upload a short voice clip and get a gender + emotion prediction — scored by your choice of two independently trained models: a CNN+LSTM built in Keras/TensorFlow, or a scikit-learn MLP. Both read the same 20-value mean-MFCC summary of the clip. Not a keyword match either way.</p>
+    <div class="ctas">
+      <a href="#try" class="btn">Upload a clip ↓</a>
+      <a href="#how" class="btn dark">How it works</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>16</b><span>gender + emotion classes</span></div>
+      <div class="stat"><b>CNN+LSTM</b><span>Keras/TensorFlow</span></div>
+      <div class="stat"><b>MLP</b><span>scikit-learn</span></div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="section-head"><h2>How it works</h2><span class="num">01 — 03</span></div>
+    <div class="steps">
+      <div class="step">
+        <div class="n">1</div>
+        <h3>Upload a clip</h3>
+        <p>Drop or select a short .wav recording — a sentence or two is enough to read tone.</p>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <h3>Pick a model</h3>
+        <p>Both read the same 20-value mean-MFCC vector. CNN+LSTM (Keras) treats it as a short sequence through 3 conv layers and 2 LSTM layers. MLP (scikit-learn) reads it through one large dense hidden layer.</p>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <h3>Model scores it</h3>
+        <p>Whichever you pick runs its own trained classifier and scores all 16 gender + emotion combinations independently — the two rarely agree exactly, which is part of the point.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="try">
+    <div class="section-head"><h2>Try it</h2><span class="num">live model</span></div>
+    <div class="grid-2">
+
+      <div class="card shadow upload-card">
+        <div class="hd">
+          <h3>Upload &amp; run</h3>
+          <div class="unit-toggle" id="modelToggle">
+            <button data-model="cnn-lstm" class="active">CNN+LSTM</button>
+            <button data-model="mlp">MLP</button>
+          </div>
+        </div>
+        <label class="dropzone" id="dropzone">
+          <input type="file" id="fileInput" accept="audio/*">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+          <div class="hint" id="dzHint">Click or drop a .wav file here</div>
+          <div class="sub">mono, a few seconds, clear speech works best</div>
+        </label>
+
+        <div class="player" id="player">
+          <button class="play" id="playBtn" type="button">
+            <svg id="playIcon" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4z"/></svg>
+          </button>
+          <div class="seek" id="seek"><i id="seekFill"></i></div>
+          <span class="time" id="timeLabel">0:00 / 0:00</span>
+        </div>
+        <div class="name" id="fileName"></div>
+
+        <button id="go" class="btn" disabled>Run prediction →</button>
+        <div class="err" id="err"></div>
+      </div>
+
+      <div class="card shadow-sm result-card">
+        <div class="placeholder" id="placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          <p>The emotion breakdown<br>will show up here.</p>
+        </div>
+        <div id="result"><div class="readout"></div></div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="section-head"><h2>FAQ</h2><span class="num">5 questions</span></div>
+    <div id="faqList">
+      <div class="faq-item open">
+        <div class="faq-q"><span>What's the difference between the two models?</span><span class="plus">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Both read the same 20-value mean-MFCC vector, but score it differently. <b>CNN+LSTM</b> (Keras/TensorFlow) reshapes it into a short sequence and runs it through 3 Conv1D layers and 2 LSTM layers. <b>MLP</b> (scikit-learn) reads it through a single 2300-unit dense hidden layer. Two different architectures, trained and scored independently.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span>Why does it predict gender as well as emotion?</span><span class="plus">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">RAVDESS's 24 actors split evenly by gender, and voice pitch is itself a strong emotion-recognition signal — so both models are trained on 16 combined classes like <code>male_happy</code> or <code>female_calm</code>, not emotion alone.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span>Why might a model say "not trained yet"?</span><span class="plus">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Both need a labeled speech-emotion dataset (e.g. RAVDESS), which is licensed and can't be bundled here. Run <code>train_cnn_lstm.py</code> or <code>train_mlp.py</code> against your own copy to produce each model's file.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span>What audio works best?</span><span class="plus">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Short, clear, single-speaker clips — a few seconds of one sentence. Background noise and overlapping voices reduce accuracy, same as with any speech model.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span>Is my audio uploaded anywhere?</span><span class="plus">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">It's sent only to this app's own <code>POST /predict/cnn-lstm</code> or <code>/predict/mlp</code> endpoint for one inference pass, then discarded — the backend deletes the temp file right after reading it.</div></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <div>
+        <h3>VoiceTone</h3>
+        <p>A speech emotion recognizer built from scratch — model, API and this frontend, hand-coded, no template.</p>
+      </div>
+      <div class="stack">
+        <span>Python</span><span>PyTorch</span><span>FastAPI</span><span>HTML/CSS/JS</span>
+      </div>
+    </div>
+    <div class="bottom">
+      <span>© 2026 VoiceTone — built solo.</span>
+      <span>No frameworks. No build step. Just HTML, CSS &amp; JS.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Set this to your deployed API's URL when hosting this page separately from the backend.
+  // Leave as window.location.origin if this file is served by the FastAPI app itself.
+  const API_BASE = window.location.origin;
+
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const dzHint = document.getElementById('dzHint');
+  const fileNameEl = document.getElementById('fileName');
+  const goBtn = document.getElementById('go');
+  const resultEl = document.getElementById('result');
+  const readoutEl = resultEl.querySelector('.readout');
+  const placeholderEl = document.getElementById('placeholder');
+  const errEl = document.getElementById('err');
+
+  let selectedFile = null;
+  let selectedModel = 'cnn-lstm';
+  const audio = new Audio();
+
+  // --- model toggle ---
+  document.querySelectorAll('#modelToggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#modelToggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedModel = btn.dataset.model;
+      resultEl.querySelector('.readout').style.display = 'none';
+      placeholderEl.style.display = 'block';
+    });
+  });
+
+  // --- drag & drop ---
+  ['dragenter', 'dragover'].forEach(evt =>
+    dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('drag'); })
+  );
+  ['dragleave', 'drop'].forEach(evt =>
+    dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('drag'); })
+  );
+  dropzone.addEventListener('drop', e => {
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) handleFile(file);
+  });
+
+  function handleFile(file){
+    if (!file.type.startsWith('audio/')) {
+      errEl.textContent = 'That file doesn\'t look like audio — pick a .wav or .mp3 clip.';
+      errEl.style.display = 'block';
+      return;
+    }
+    errEl.style.display = 'none';
+    selectedFile = file;
+    dzHint.textContent = 'Selected: ' + file.name;
+    fileNameEl.textContent = `${file.name} · ${(file.size / 1024).toFixed(0)} KB`;
+    audio.src = URL.createObjectURL(file);
+    document.getElementById('player').classList.add('on');
+    goBtn.disabled = false;
+    resetPlayer();
+    placeholderEl.style.display = 'block';
+    readoutEl.style.display = 'none';
+  }
+
+  // --- custom audio player ---
+  const playBtn = document.getElementById('playBtn');
+  const playIcon = document.getElementById('playIcon');
+  const seek = document.getElementById('seek');
+  const seekFill = document.getElementById('seekFill');
+  const timeLabel = document.getElementById('timeLabel');
+
+  const fmt = s => {
+    if (!isFinite(s)) return '0:00';
+    const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  };
+  function resetPlayer(){
+    playIcon.innerHTML = '<path d="M6 4l14 8-14 8V4z"/>';
+    seekFill.style.width = '0%';
+    timeLabel.textContent = '0:00 / 0:00';
+  }
+  playBtn.addEventListener('click', () => {
+    if (audio.paused) { audio.play(); playIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'; }
+    else { audio.pause(); playIcon.innerHTML = '<path d="M6 4l14 8-14 8V4z"/>'; }
+  });
+  audio.addEventListener('timeupdate', () => {
+    const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+    seekFill.style.width = pct + '%';
+    timeLabel.textContent = `${fmt(audio.currentTime)} / ${fmt(audio.duration)}`;
+  });
+  audio.addEventListener('ended', () => { playIcon.innerHTML = '<path d="M6 4l14 8-14 8V4z"/>'; });
+  seek.addEventListener('click', e => {
+    if (!audio.duration) return;
+    const rect = seek.getBoundingClientRect();
+    audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+  });
+
+  // --- submit ---
+  goBtn.addEventListener('click', async () => {
+    if (!selectedFile) return;
+    goBtn.disabled = true;
+    const originalLabel = goBtn.textContent;
+    goBtn.textContent = 'Running…';
+    errEl.style.display = 'none';
+
+    const form = new FormData();
+    form.append('file', selectedFile);
+
+    try {
+      const res = await fetch(API_BASE + '/predict/' + selectedModel, { method: 'POST', body: form });
+      if (!res.ok) {
+        let detail = `API returned ${res.status}`;
+        try { detail = (await res.json()).detail || detail; } catch (_) { /* non-JSON error body */ }
+        throw new Error(detail);
+      }
+      renderResult(await res.json());
+    } catch (e) {
+      errEl.textContent = 'Request failed: ' + e.message;
+      errEl.style.display = 'block';
+    } finally {
+      goBtn.disabled = false;
+      goBtn.textContent = originalLabel;
+    }
+  });
+
+  function splitLabel(label) {
+    const [gender, ...rest] = label.split('_');
+    return { gender, emotion: rest.join('_') };
+  }
+
+  function renderResult(data) {
+    placeholderEl.style.display = 'none';
+    const sorted = Object.entries(data.scores).sort((a, b) => b[1] - a[1]);
+    const modelLabel = selectedModel === 'cnn-lstm' ? 'CNN+LSTM' : 'MLP';
+    const top = splitLabel(data.top_label);
+
+    let html = `<div class="eyebrow2">PREDICTED · ${modelLabel}</div>`;
+    html += `<div class="emotion">${top.emotion}</div>`;
+    html += `<div class="conf">predicted speaker: ${top.gender} · confidence ${(data.confidence*100).toFixed(0)}%</div>`;
+    for (const [label, score] of sorted) {
+      const isTop = label === data.top_label;
+      const { gender, emotion } = splitLabel(label);
+      html += `<div class="bar-row ${isTop ? 'top' : ''}"><span>${emotion} (${gender})</span><div class="track"><i style="width:${(score*100).toFixed(0)}%"></i></div><span>${(score*100).toFixed(0)}%</span></div>`;
+    }
+    readoutEl.innerHTML = html;
+    readoutEl.style.display = 'block';
+  }
+
+  // --- FAQ accordion ---
+  document.querySelectorAll('.faq-q').forEach(q => {
+    q.addEventListener('click', () => {
+      const item = q.closest('.faq-item');
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!isOpen) item.classList.add('open');
+    });
+  });
+</script>
+</body>
+</html>

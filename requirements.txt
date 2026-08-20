@@ -1,0 +1,10 @@
+tensorflow>=2.16.0
+keras>=3.0.0
+librosa>=0.10.1
+numpy>=1.26.0
+scikit-learn>=1.4.0
+soundfile>=0.12.1
+joblib>=1.4.0
+fastapi>=0.111.0
+uvicorn>=0.29.0
+python-multipart>=0.0.9
